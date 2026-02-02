@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Конструктор профессий</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+body{margin:0;font-family:Inter,Roboto,Arial,sans-serif;background:#111;color:#eee}
+header{padding:20px;background:#1b1b1b;font-size:22px;font-weight:600}
+section{padding:20px;max-width:1100px;margin:auto}
+.card{background:#1e1e1e;border-radius:12px;padding:16px;margin-bottom:16px}
+label{display:block;margin-top:10px;font-size:14px;color:#bbb}
+input,select{width:100%;padding:8px;margin-top:4px;background:#2a2a2a;border:1px solid #333;color:#fff;border-radius:6px}
+button{margin-top:20px;padding:12px 18px;background:#4f46e5;border:none;border-radius:8px;color:#fff;font-size:16px;cursor:pointer}
+button:hover{background:#6366f1}
+.progress{height:8px;background:#333;border-radius:4px;overflow:hidden;margin-bottom:20px}
+.progress div{height:100%;background:#4f46e5;width:0%}
+.result{border-left:4px solid #4f46e5;padding-left:12px;margin-bottom:12px}
+.bad{color:#f87171}
+.good{color:#4ade80}
+</style>
+</head>
+<body>
+<header>Конструктор профессий — профориентация</header>
+<section id="app"></section>
+<script>
+const app=document.getElementById('app')
+let step=0
+const data={subjects:{},traits:{}}
+const subjects=["Русский","Иностранный","Алгебра","Геометрия","География","Вероятность и статистика","Музыка","Физкультура","Черчение","Литература","Физика","Химия","Информатика","Биология","Обществознание","История"]
+const professions=[
+{name:"Программист",req:{"Информатика":4,"Алгебра":4},burn:7,salary:120},
+{name:"Инженер",req:{"Физика":4,"Алгебра":4},burn:6,salary:90},
+{name:"Юрист",req:{"Обществознание":4,"Русский":4},burn:8,salary:80},
+{name:"Дизайнер",req:{"Черчение":3,"Информатика":3},burn:6,salary:70},
+{name:"Сварщик",req:{},burn:4,salary:60,low:true},
+{name:"Разнорабочий",req:{},burn:3,salary:45,low:true},
+{name:"Дворник",req:{},burn:2,salary:35,low:true}
+]
+function render(){
+app.innerHTML=''
+const progress=document.createElement('div')
+progress.className='progress'
+progress.innerHTML=`<div style="width:${(step/3)*100}%"></div>`
+app.append(progress)
+if(step===0)school()
+if(step===1)traits()
+if(step===2)life()
+if(step===3)result()
+}
+function school(){
+const c=document.createElement('div');c.className='card'
+c.innerHTML='<h2>Успеваемость</h2>'
+subjects.forEach(s=>{
+const l=document.createElement('label');l.textContent=s+' (1–5)'
+const i=document.createElement('input');i.type='number';i.min=1;i.max=5;i.value=3
+i.onchange=()=>data.subjects[s]=+i.value
+c.append(l,i)
+data.subjects[s]=3
+})
+const b=document.createElement('button');b.textContent='Далее';b.onclick=()=>{step++;render()}
+c.append(b)
+app.append(c)
+}
+function traits(){
+const c=document.createElement('div');c.className='card'
+c.innerHTML='<h2>Психология и режим</h2>'
+const qs=[
+['stress','Стрессоустойчивость (1–10)'],
+['burn','Склонность к выгоранию (1–10)'],
+['wake','Могу вставать рано (1–10)'],
+['physical','Физическая выносливость (1–10)']]
+qs.forEach(q=>{
+const l=document.createElement('label');l.textContent=q[1]
+const i=document.createElement('input');i.type='range';i.min=1;i.max=10;i.value=5
+i.oninput=()=>data.traits[q[0]]=+i.value
+data.traits[q[0]]=5
+c.append(l,i)
+})
+const b=document.createElement('button');b.textContent='Далее';b.onclick=()=>{step++;render()}
+c.append(b)
+app.append(c)
+}
+function life(){
+const c=document.createElement('div');c.className='card'
+c.innerHTML='<h2>Ожидания</h2>'
+const l=document.createElement('label');l.textContent='Минимальная зарплата (тыс. ₽)'
+const i=document.createElement('input');i.type='number';i.value=50
+i.onchange=()=>data.salary=+i.value
+data.salary=50
+c.append(l,i)
+const b=document.createElement('button');b.textContent='Результат';b.onclick=()=>{step++;render()}
+c.append(b)
+app.append(c)
+}
+function result(){
+const c=document.createElement('div');c.className='card'
+c.innerHTML='<h2>Подходящие профессии</h2>'
+let avg=Object.values(data.subjects).reduce((a,b)=>a+b,0)/subjects.length
+professions.forEach(p=>{
+let ok=true
+for(let r in p.req){if((data.subjects[r]||0)<p.req[r])ok=false}
+if(p.salary<data.salary)ok=false
+if(!ok)return
+if(avg<3 && !p.low)return
+const d=document.createElement('div');d.className='result'
+d.innerHTML=`<b>${p.name}</b><br>Доход: ~${p.salary} тыс.<br>Риск выгорания: ${p.burn}/10`
+if(p.burn>7)d.classList.add('bad')
+if(p.burn<=5)d.classList.add('good')
+c.append(d)
+})
+app.append(c)
+}
+render()
+</script>
+</body>
+</html>
